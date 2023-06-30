@@ -1,125 +1,189 @@
 import 'package:flutter/material.dart';
+import 'package:installed_apps/app_info.dart';
+import 'package:installed_apps/installed_apps.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() => runApp(App());
+
+class App extends MaterialApp {
+  @override
+  Widget get home => HomeScreen();
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
+class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a blue toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+    return Scaffold(
+      appBar: AppBar(title: const Text("Installed Apps Example")),
+      body: ListView(
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: ListTile(
+                title: Text("Apps instalados"),
+                subtitle: Text(
+                    "Obtenha aplicativos instalados no dispositivo. Com opções para excluir o aplicativo do sistema, obtenha o ícone do aplicativo e o prefixo do nome do pacote correspondente."),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => InstalledAppsScreen(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: ListTile(
+                title: Text("App Info"),
+                subtitle: Text(
+                    "Obter informações do aplicativo com o nome do pacote"),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AppInfoScreen(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: ListTile(
+                title: Text("Start App"),
+                subtitle: Text(
+                    "Inicie o aplicativo com o nome do pacote. Obtenha retorno de chamada de sucesso ou falha."),
+                onTap: () => InstalledApps.startApp("com.google.android.gm"),
+              ),
+            ),
+          ),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: ListTile(
+                title: Text("Vá para a tela de configurações do aplicativo"),
+                subtitle: Text(
+                    "Navegue diretamente para a tela de configurações do aplicativo com o nome do pacote"),
+                onTap: () =>
+                    InstalledApps.openSettings("com.google.android.gm"),
+              ),
+            ),
+          ),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: ListTile(
+                title: Text("Verifique se o aplicativo do sistema"),
+                subtitle: Text(
+                    "Verifique se o aplicativo é um aplicativo do sistema com o nome do pacote"),
+                onTap: () =>
+                    InstalledApps.isSystemApp("com.google.android.gm").then(
+                  (bool? value) => _showDialog(
+                      context,
+                      value ?? false
+                          ? "O aplicativo solicitado é um aplicativo do sistema."
+                          : "Aplicativo solicitado em um aplicativo que não é do sistema."),
+                ),
+              ),
+            ),
+          )
+        ],
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    );
+  }
+
+  void _showDialog(BuildContext context, String text) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Text(text),
+          actions: <Widget>[
+            TextButton(
+              child: Text("Fechar"),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
+class InstalledAppsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+      appBar: AppBar(title: Text("Apps instalados")),
+      body: FutureBuilder<List<AppInfo>>(
+        future: InstalledApps.getInstalledApps(true, true),
+        builder:
+            (BuildContext buildContext, AsyncSnapshot<List<AppInfo>> snapshot) {
+          return snapshot.connectionState == ConnectionState.done
+              ? snapshot.hasData
+                  ? ListView.builder(
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        AppInfo app = snapshot.data![index];
+                        return Card(
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.transparent,
+                              child: Image.memory(app.icon!),
+                            ),
+                            title: Text(app.name!),
+                            subtitle: Text(app.getVersionInfo()),
+                            onTap: () =>
+                                InstalledApps.startApp(app.packageName!),
+                            onLongPress: () =>
+                                InstalledApps.openSettings(app.packageName!),
+                          ),
+                        );
+                      },
+                    )
+                  : Center(
+                      child: Text(
+                          "Ocorreu um erro ao obter aplicativos instalados ...."))
+              : Center(child: Text("Obtendo aplicativos instalados ...."));
+        },
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
+    );
+  }
+}
+
+class AppInfoScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("App Info")),
+      body: FutureBuilder<AppInfo>(
+        future: InstalledApps.getAppInfo("com.google.android.gm"),
+        builder: (BuildContext buildContext, AsyncSnapshot<AppInfo> snapshot) {
+          return snapshot.connectionState == ConnectionState.done
+              ? snapshot.hasData
+                  ? Center(
+                      child: Column(
+                        children: [
+                          Image.memory(snapshot.data!.icon!),
+                          Text(
+                            snapshot.data!.name!,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 40,
+                            ),
+                          ),
+                          Text(snapshot.data!.getVersionInfo())
+                        ],
+                      ),
+                    )
+                  : Center(
+                      child:
+                          Text("Erro ao obter informações do aplicativo ...."))
+              : Center(child: Text("Obtendo informações do aplicativo ...."));
+        },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
